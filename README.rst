@@ -2,9 +2,11 @@
 pyzip 0.0.1
 ==============
 
+`PyZip` is a package for managing a zip content as a dictionary.
+
 .. image:: https://badge.fury.io/py/pyzip.svg
     :target: https://badge.fury.io/py/pyzip
-    
+
 .. image:: https://travis-ci.org/ipazc/pyzip.svg?branch=master
     :target: https://travis-ci.org/ipazc/pyzip
 
@@ -15,7 +17,7 @@ pyzip 0.0.1
    :target: https://landscape.io/github/ipazc/pyzip/master
    :alt: Code Health
 
-`PyZip` is a package for managing a zip content as a dictionary.
+Is this zipping process simple enough?
 
 .. code:: python
 
