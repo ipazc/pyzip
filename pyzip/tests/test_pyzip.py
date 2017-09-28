@@ -225,6 +225,21 @@ class TestPyZip(unittest.TestCase):
         self.assertEqual(pyzip["a"], b"a1")
         self.assertEqual(pyzip["c"], b"a3")
 
+    def test_pyzip_to_dict(self):
+        """
+        PyZip can be converted to a dict.
+        :return:
+        """
+        pyzip = PyZip()
+        pyzip["a"] = b"a1"
+        pyzip["b"] = b"a2"
+        pyzip["c"] = b"a3"
+
+        d = dict(pyzip)
+
+        self.assertEqual(d["b"], b"a2")
+        self.assertEqual(d["a"], b"a1")
+        self.assertEqual(d["c"], b"a3")
 
 if __name__ == '__main__':
     unittest.main()
