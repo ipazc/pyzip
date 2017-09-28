@@ -1,7 +1,7 @@
 ==============
 pyzip 0.0.1
 ==============
-PyZip is a package for handling zip-in-memory content as a dictionary. 
+`PyZip` is a package for managing a zip content as a dictionary.
 
 .. code:: python
 
@@ -11,15 +11,15 @@ PyZip is a package for handling zip-in-memory content as a dictionary.
     >>> pyzip['key1'] = b"content_bytes"
     >>> pyzip['key2'] = file_bytes
     >>>
-    >>> pyzip.to_file("/path/to/file.zip")
+    >>> pyzip.save("/path/to/file.zip")
     >>> zip_bytes = pyzip.to_bytes() # Alternatively, to bytes
 
-It is run on top of the module `zipfile`, however, in addition to its functionality, PyZip accepts to edit and remove
+It is run on top of the module `zipfile`, however, in addition to its functionality, `PyZip` accepts to edit and remove
 elements of a zip.
 
 Installation
 ============
-Currently it is only supported Python 3.4.1 onwards:
+Currently it is only supported **Python 3.4.1** onwards:
 
 .. code:: bash
     
@@ -27,7 +27,7 @@ Currently it is only supported Python 3.4.1 onwards:
 
 Basic Usage
 ===============
-PyZip can easily store content into a zip on the fly. The usage is the same as a normal dictionary: 
+`PyZip` can easily store content into a zip on the fly. The usage is the same as a normal dictionary:
 
 * Add content to in-memory zip:
 
@@ -39,7 +39,7 @@ PyZip can easily store content into a zip on the fly. The usage is the same as a
     >>> pyzip['key1'] = b"content_bytes"
 
 
-* Get specific content from in-memory zip:
+* Get specific content:
 
 .. code:: python
 
@@ -47,14 +47,14 @@ PyZip can easily store content into a zip on the fly. The usage is the same as a
     b"content_bytes"
     
 
-* Edit content of in-memory zip:
+* Edit content:
 
 .. code:: python
 
     >>> pyzip['key1'] = b"replaced_content_bytes"
 
 
-* Remove content of in-memory zip:
+* Remove content:
 
 .. code:: python
 
@@ -125,7 +125,7 @@ Uncompressing a folder from a zip:
     >>>
     >>> destination = "route/for/uncompress"
     >>>
-    >>> pyzip = PyZip.from_file("compressed_folder.zip)
+    >>> pyzip = PyZip.from_file("compressed_folder.zip")
     >>>
     >>> for filename, content in pyzip.items():
     >>>     with open(os.path.join(destination, filename), "wb") as f:
