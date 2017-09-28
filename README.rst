@@ -2,6 +2,9 @@
 pyzip 0.0.1
 ==============
 
+.. image:: https://badge.fury.io/py/pyzip.svg
+    :target: https://badge.fury.io/py/pyzip
+    
 .. image:: https://travis-ci.org/ipazc/pyzip.svg?branch=master
     :target: https://travis-ci.org/ipazc/pyzip
 
