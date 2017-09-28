@@ -14,6 +14,6 @@ install:
   - pip3 install coveralls
 # # command to run tests, e.g. python setup.py test
 script:
-  - python3 setup.py nosetests --with-coverage --cover-package vrpwrp --verbosity=2 
+  - python3 setup.py nosetests --with-coverage --cover-package pyzip --verbosity=2 
 after_success:
   - coveralls
