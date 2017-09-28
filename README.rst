@@ -1,6 +1,17 @@
 ==============
 pyzip 0.0.1
 ==============
+
+.. image:: https://travis-ci.org/ipazc/pyzip.svg?branch=master
+    :target: https://travis-ci.org/ipazc/pyzip
+
+.. image:: https://coveralls.io/repos/github/ipazc/pyzip/badge.svg?branch=master
+    :target: https://coveralls.io/github/ipazc/pyzip?branch=master
+
+.. image:: https://landscape.io/github/ipazc/pyzip/master/landscape.svg?style=flat
+   :target: https://landscape.io/github/ipazc/pyzip/master
+   :alt: Code Health
+
 `PyZip` is a package for managing a zip content as a dictionary.
 
 .. code:: python
