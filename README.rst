@@ -1,5 +1,5 @@
 ==============
-pyzip 0.0.1
+pyzip 0.1.0
 ==============
 
 `PyZip` is a package for managing a zip content as a dictionary.
@@ -31,7 +31,7 @@ Is this zipping process simple enough?
     >>> zip_bytes = pyzip.to_bytes() # Alternatively, to bytes
 
 It is run on top of the module `zipfile`, however, in addition to its functionality, `PyZip` accepts to edit and remove
-elements of a zip.
+elements of a zip. Furthermore, it provides integrity checks to ensure that elements are successfully stored (SHA256 hash).
 
 Installation
 ============
@@ -42,7 +42,7 @@ Currently it is only supported **Python 3.4.1** onwards:
     sudo pip3 install pyzip
 
 Basic Usage
-===============
+===========
 `PyZip` can easily store content into a zip on the fly. The usage is the same as a normal dictionary:
 
 * Add content to in-memory zip:
@@ -103,17 +103,25 @@ Basic Usage
 .. code:: python
 
     >>> pyzip = PyZip.from_file("path/to/file.zip")
-    
+
+
 * Convert existing dictionary into PyZip:
 
 .. code:: python
 
     >>> pyzip = PyZip({'file1': b'example', 'file2': b'example2'})
-    
-    
+
+
+* It is also possible to convert a multiple level dict into a PyZip:
+
+.. code:: python
+
+    >>> pyzip = PyZip({'file1': b'example', 'file2': b'example2', 'folder1': {'file1': b'file1 in folder1'}})
+
+
     
 Use case
-===============
+========
 Compressing a folder into a zip:
 
 
@@ -147,3 +155,8 @@ Uncompressing a folder from a zip:
     >>>     with open(os.path.join(destination, filename), "wb") as f:
     >>>        f.write(content)
     >>>
+
+LICENSE
+=======
+
+It is released under the MIT license.

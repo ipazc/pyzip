@@ -1,11 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+#
+#MIT License
+#
+#Copyright (c) 2017 Iván de Paz Centeno
+#
+#Permission is hereby granted, free of charge, to any person obtaining a copy
+#of this software and associated documentation files (the "Software"), to deal
+#in the Software without restriction, including without limitation the rights
+#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#copies of the Software, and to permit persons to whom the Software is
+#furnished to do so, subject to the following conditions:
+#
+#The above copyright notice and this permission notice shall be included in all
+#copies or substantial portions of the Software.
+#
+#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+#SOFTWARE.
+
 from io import BytesIO
 from random import random
-
 import unittest
+from zipfile import ZipFile
+from pyzip import PyZip, InvalidKeysHashes
 
-from pyzip import PyZip
 
 __author__ = 'Iván de Paz Centeno'
 
@@ -106,7 +129,7 @@ class TestPyZip(unittest.TestCase):
         pyzip["3"] = b"hola3"
         pyzip["4"] = b"hola4"
 
-        self.assertEqual(pyzip.keys(), ["1", "2", "3", "4"])
+        self.assertTrue(all([x in pyzip.keys() for x in ["1", "2", "3", "4"]]))
 
     def test_pyzip_keys_to_str(self):
         """
@@ -118,7 +141,7 @@ class TestPyZip(unittest.TestCase):
         pyzip[3] = b"hola3"
         pyzip[4] = b"hola4"
 
-        self.assertEqual(pyzip.keys(), ["1", "2", "3", "4"])
+        self.assertTrue(all([x in pyzip.keys() for x in ["1", "2", "3", "4"]]))
 
     def test_pyzip_from_dict(self):
         """
@@ -174,7 +197,7 @@ class TestPyZip(unittest.TestCase):
         pyzip[3] = b"hola3"
         pyzip[4] = b"hola4"
 
-        self.assertEqual(str(pyzip), "['1', '2', '3', '4']")
+        self.assertTrue(all([x in str(pyzip) for x in pyzip.keys()]))
 
     def test_pyzip_wrong_key_exception(self):
         """
@@ -240,6 +263,52 @@ class TestPyZip(unittest.TestCase):
         self.assertEqual(d["b"], b"a2")
         self.assertEqual(d["a"], b"a1")
         self.assertEqual(d["c"], b"a3")
+
+    def test_pyzip_deep_dicts(self):
+        """
+        PyZip can compress dicts containing dicts.
+        :return:
+        """
+        pyzip = PyZip()
+        pyzip["a"] = b"a1"
+        pyzip["b"] = b"a2"
+        pyzip["c"] = {"c1": b"c1"}
+
+        compression = pyzip.to_bytes()
+        new_pyzip = PyZip.from_bytes(compression)
+        self.assertTrue(all([x in new_pyzip for x in "abc"]))
+        self.assertEqual(new_pyzip["c"]["c1"], b"c1")
+
+    def test_pyzip_integrity(self):
+        """
+        PyZip stores hashes of elements and checks for integrity.
+        :return:
+        """
+        pyzip = PyZip()
+        pyzip["a"] = b"a1"
+        pyzip["b"] = b"a2"
+        pyzip["c"] = {"c1": b"c1"}
+
+        compression = pyzip.to_bytes()
+
+        storage = {}
+        with BytesIO(compression) as b, ZipFile(b) as z:
+            storage = {x: z.read(x) for x in z.namelist()}
+
+        print(storage.keys())
+        storage["a"] = b"ba0"  # small modification to trigger the integrity check
+
+
+        with BytesIO() as b:
+            with ZipFile(b, mode="a") as z:
+                for key, v in storage.items():
+                    z.writestr(key, v)
+            b.seek(0)
+            content = b.read()
+
+        with self.assertRaises(InvalidKeysHashes) as ex:
+            new_pyzip = PyZip.from_bytes(content)
+
 
 if __name__ == '__main__':
     unittest.main()
