@@ -1,5 +1,5 @@
 ==============
-pyzip 0.1.0
+pyzip 0.2.0
 ==============
 
 `PyZip` is a package for managing a zip content as a dictionary.
@@ -88,7 +88,7 @@ Basic Usage
 
 .. code:: python
 
-    >>> pyzip = PyZip.from_bytes(zip_bytes)
+    >>> pyzip = PyZip().from_bytes(zip_bytes)
     
 
 * Save to zip file:
@@ -102,7 +102,7 @@ Basic Usage
 
 .. code:: python
 
-    >>> pyzip = PyZip.from_file("path/to/file.zip")
+    >>> pyzip = PyZip().from_file("path/to/file.zip")
 
 
 * Convert existing dictionary into PyZip:
@@ -122,38 +122,34 @@ Basic Usage
     
 Use case
 ========
-Compressing a folder into a zip:
+
+PyZip can be used in along with `PyFolder <https://pypi.python.org/pypi/pyfolder/0.0.1>`_ in order to ease the compression and decompression of folders and zips:
+
+
+**Compressing recursively a folder into a zip:**
 
 
 .. code:: python
 
     >>> from pyzip import PyZip
-    >>> import os
+    >>> from pyfolder import PyFolder
     >>>
     >>> path_to_compress = "route/to/files"
     >>>
-    >>> pyzip = PyZip()
-    >>>
-    >>> for file in os.listdir(path_to_compress):
-    >>>     with open(path_to_compress, "rb") as f:
-    >>>        pyzip[file] = f.read()
-    >>>
+    >>> pyzip = PyZip(PyFolder(path_to_compress, interpret=False))
     >>> pyzip.save("compressed_folder.zip")
+    >>>
 
-Uncompressing a folder from a zip:
+**Uncompressing recursively a previously compressed folder from a zip:**
 
 .. code:: python
 
     >>> from pyzip import PyZip
-    >>> import os
+    >>> from pyfolder import PyFolder
     >>>
     >>> destination = "route/for/uncompress"
     >>>
-    >>> pyzip = PyZip.from_file("compressed_folder.zip")
-    >>>
-    >>> for filename, content in pyzip.items():
-    >>>     with open(os.path.join(destination, filename), "wb") as f:
-    >>>        f.write(content)
+    >>> pyzip = PyZip(PyFolder(destination, interpret=False)).from_file("compressed_folder.zip", inflate=False)
     >>>
 
 LICENSE

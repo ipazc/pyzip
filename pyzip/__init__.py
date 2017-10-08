@@ -48,38 +48,84 @@ class PyZip(object):
     In memory zipper dictionary
     """
 
-    def __init__(self, initial_dict=None, compress=True):
+    def __init__(self, initial_dict=None, compress=True, reuse_dict=True):
         self.compression = {True: ZIP_DEFLATED, False: ZIP_STORED}[compress]
 
         if initial_dict is None:
             initial_dict = {}
 
-        self.zip_content = dict(initial_dict)
+        if reuse_dict:
+            self.zip_content = initial_dict
+        else:
+            self.zip_content = dict(initial_dict)
+
         self.cached_content = b""
         self.modified = len(self.zip_content) > 0
+
+    @staticmethod
+    def __flatten_dict(dictionary):
+        keys = []
+        values = []
+
+        for k, v in dictionary.items():
+
+            flat_root = k
+
+            if isinstance(v, dict):
+                flattened_keys, flattened_values = PyZip.__flatten_dict(v)
+
+                keys += ["{}/{}".format(flat_root, flat) for flat in flattened_keys]
+                values += flattened_values
+            else:
+                keys += ["{}".format(k)]
+                values += [v]
+
+        return keys, values
+
+    @staticmethod
+    def _flatten_dict(dictionary):
+        keys, values = PyZip.__flatten_dict(dictionary)
+        return {k: v for k, v in zip(keys, values)}
+
+    @staticmethod
+    def _inflate_dict(dictionary):
+        result_dict = {}
+
+        for k, v in dictionary.items():
+            if "/" in k:
+                keys = k.split("/")
+
+                it_dict = result_dict
+                for key in keys[:-1]:
+                    if key not in it_dict:
+                        it_dict[key] = {}
+                    it_dict = it_dict[key]
+
+                it_dict[keys[-1]] = v
+
+            else:
+                result_dict[k] = v
+
+        return result_dict
 
     def __cache_content(self, store_hashes):
         hashes = {}
 
         with BytesIO() as b:
             with ZipFile(b, mode="a", compression=self.compression) as z:
-                for key, v in self.items():
-                    if type(v) is dict:
-                        k = "[-__PYZIP__-]{}".format(key)
-                        content = PyZip(v).to_bytes()
-                    else:
-                        k = key
-                        content = v
+                flattened_content = self._flatten_dict(self.zip_content)
+
+                for key, content in flattened_content.items():
 
                     if store_hashes:
                         value_hash = hashlib.sha256(content).hexdigest()
                         hashes[str(key)] = value_hash.encode()
 
-                    z.writestr(str(k), content)
+                    z.writestr(str(key), content)
 
                 if store_hashes:
                     hashes_bytes = PyZip(hashes).to_bytes(store_hashes=False)
-                    z.writestr('[-__PYZIP__HASHES__-]', hashes_bytes)
+                    z.writestr('__SHA256__HASHES__.zip', hashes_bytes)
 
             b.seek(0)
             self.cached_content = b.read()
@@ -97,6 +143,7 @@ class PyZip(object):
 
     def __delitem__(self, key):
         del self.zip_content[key]
+        self.modified = True
 
     def __str__(self):
         return str(self.keys())
@@ -121,61 +168,57 @@ class PyZip(object):
         for k, v in self.zip_content.items():
             yield k, v
 
-    def size(self):
+    def size(self, store_hashes=True):
         """
         Retrieves the size in bytes of this ZIP content.
         :return: Size of the zip content in bytes
         """
         if self.modified:
-            self.__cache_content()
+            self.__cache_content(store_hashes)
 
         return len(self.cached_content)
 
-    @classmethod
-    def from_bytes(cls, bytes, compress=True):
+    def from_bytes(self, bytes, inflate=True):
 
-        zip_content = {}
+        zip_content = self.zip_content
+        zip_content.clear()
+
         hashes = None
-        hash_value = None
         invalid_hashes = []
 
         with BytesIO(bytes) as b, ZipFile(b) as z:
 
-            if "[-__PYZIP__HASHES__-]" in z.namelist():
-                hashes = PyZip.from_bytes(z.read("[-__PYZIP__HASHES__-]"))
+            if "__SHA256__HASHES__.zip" in z.namelist():
+                hashes = PyZip().from_bytes(z.read("__SHA256__HASHES__.zip"), inflate=False)
 
             for key in z.namelist():
-                if key == "[-__PYZIP__HASHES__-]":
+                if key == "__SHA256__HASHES__.zip":
                     continue
 
-                if key.startswith("[-__PYZIP__-]"):
-                    k = key.strip("[-__PYZIP__-]")
-                    content = z.read(key)
-                    if hashes is not None:
-                        hash_value = hashlib.sha256(content).hexdigest()
+                if key[-1] == "/":
+                    continue
 
-                    v = PyZip.from_bytes(content)
-                else:
-                    k = key
-                    v = z.read(key)
+                content = z.read(key)
 
-                    if hashes is not None:
-                        hash_value = hashlib.sha256(v).hexdigest()
-
+                # Let's check content hash
                 if hashes is not None:
-                    v_hash = hashes[k]
-                    if v_hash != hash_value.encode():
-                        invalid_hashes.append(k)
+                    hash_value = hashlib.sha256(content).hexdigest().encode()
+                    if hash_value != hashes[key]:
+                        invalid_hashes.append(key)
+                        continue
 
-                zip_content[k] = v
+                zip_content[key] = content
 
         if len(invalid_hashes) > 0:
             raise InvalidKeysHashes(invalid_hashes)
 
-        pyzip = cls(zip_content)
-        pyzip.cached_content = bytes
-        pyzip.modified = False
-        return pyzip
+        if inflate:
+            self.zip_content = self._inflate_dict(zip_content)
+
+        self.cached_content = bytes
+        self.modified = False
+
+        return self
 
     def to_bytes(self, store_hashes=True):
         if self.modified:
@@ -186,9 +229,8 @@ class PyZip(object):
         with open(filename, "wb") as f:
             f.write(self.to_bytes())
 
-    @classmethod
-    def from_file(cls, filename, compress=True):
+    def from_file(self, filename, compress=True, inflate=True):
         with open(filename, "rb") as f:
             content = f.read()
 
-        return PyZip.from_bytes(content)
+        return self.from_bytes(content, inflate=inflate)

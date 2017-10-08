@@ -102,7 +102,7 @@ class TestPyZip(unittest.TestCase):
 
         self.assertEqual(pyzip.to_bytes(), bytes)
 
-        pyzip2 = PyZip.from_file("test.zip")
+        pyzip2 = PyZip().from_file("test.zip")
         self.assertEqual(pyzip.to_bytes(), pyzip2.to_bytes())
         self.assertEqual(pyzip2["key1"], file_content)
 
@@ -275,7 +275,7 @@ class TestPyZip(unittest.TestCase):
         pyzip["c"] = {"c1": b"c1"}
 
         compression = pyzip.to_bytes()
-        new_pyzip = PyZip.from_bytes(compression)
+        new_pyzip = PyZip().from_bytes(compression)
         self.assertTrue(all([x in new_pyzip for x in "abc"]))
         self.assertEqual(new_pyzip["c"]["c1"], b"c1")
 
@@ -295,9 +295,7 @@ class TestPyZip(unittest.TestCase):
         with BytesIO(compression) as b, ZipFile(b) as z:
             storage = {x: z.read(x) for x in z.namelist()}
 
-        print(storage.keys())
         storage["a"] = b"ba0"  # small modification to trigger the integrity check
-
 
         with BytesIO() as b:
             with ZipFile(b, mode="a") as z:
@@ -307,7 +305,7 @@ class TestPyZip(unittest.TestCase):
             content = b.read()
 
         with self.assertRaises(InvalidKeysHashes) as ex:
-            new_pyzip = PyZip.from_bytes(content)
+            new_pyzip = PyZip().from_bytes(content)
 
 
 if __name__ == '__main__':
