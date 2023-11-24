@@ -24,7 +24,7 @@
 #SOFTWARE.
 
 import sys
-from setuptools import setup, setuptools
+from setuptools import setup, find_packages
 
 __author__ = 'Iván de Paz Centeno'
 
@@ -46,7 +46,7 @@ setup(name='pyzip',
       author='Iván de Paz Centeno',
       author_email='ipazc@unileon.es',
       license='MIT',
-      packages=setuptools.find_packages(),
+      packages=find_packages(),
       install_requires=[
       ],
       classifiers=[
