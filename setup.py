@@ -39,7 +39,7 @@ if sys.version_info < (3, 4, 1):
 
 
 setup(name='pyzip',
-      version='0.2.0',
+      version='0.3.0',
       description='PyZip is a package for handling zip-in-memory content as a dictionary.',
       long_description=readme(),
       url='http://github.com/ipazc/pyzip',
